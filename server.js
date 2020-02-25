@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 const PORT = 3000;
 
-mongoose.connect(process.env.DATABASE_URL, {
+mongoose.connect(process.env.DB_CONNECTION, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });

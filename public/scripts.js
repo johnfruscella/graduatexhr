@@ -1,26 +1,68 @@
-require("dotenv").config();
-const express = require("express");
-const app = express();
-const mongoose = require("mongoose");
+const sendHTTPRequest = (method, url, data) => {
+  const promise = new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
 
-const PORT = 3000;
+    xhr.open(method, url);
 
-mongoose.connect(process.env.DATABASE_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+    xhr.responseType = "json";
 
-app.use("/", express.static("public"));
+    if (data) {
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.onload = () => {
+        if (xhr.status >= 400) {
+          reject(xhr.response);
+        } else {
+          resolve(xhr.response);
+        }
+      }
+      xhr.onerror = () => {
+        reject('something went wrong');
+      }
+      xhr.send(JSON.stringify(data));
+    }
+  });
+  return promise;
+};
 
-const db = mongoose.connection;
+//Create GET request
+const getAllGraduates = () => {
+  sendHTTPRequest(GET, "http:localhost:3000/api/graduates", true).then(
+    responseData => {
+      console.log(responseData);
+      // document.getElementById('results').innerHTML = JSON.stringify(responseData);
 
-db.on("error", err => console.error(error));
-db.once("open", () => console.log("Connected to Database"));
+      const listGraduates = responseData.map(element => {
+        return (
+          "<li>" +
+           "First Name: " + 
+           element.firstName + 
+           ", " + 
+           "Last Name:" + 
+           element.lastName + 
+           ", " + 
+           "Email: " + 
+           element.email + 
+           "<li>"
+        );
 
-app.use(express.json());
+      });
+      console.log(listGraduates);
+      document.getElementById(results).innerHTML = "<ul>" + listGraduates.join("\n") + "</ul>";
+    }
+  );
+}
 
-const graduatesRouter = require("./routes/graduates");
+//Create Post Request
+function createNewGraduate() {
+  const graduate = {
+    firstName: document.getElementById('firstName').value,
+    lastName: document.getElementById('lastName').value,
+    email: document.getElementById('email').value
+  }
+  var xhr = new XMLHttpRequest();
 
-app.use("/api/graduates", graduatesRouter);
+  xhr.open("POST", "http://localhost:3000/api/graduates");
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify(graduate));
 
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+}
